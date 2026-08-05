@@ -68,7 +68,10 @@ GITLAB_TOKEN=tu_token_personal
 Engram es una herramienta de terceros que aporta memoria entre sesiones.
 
 ```bash
-# Instalar la CLI de Engram (según su repo oficial)
+# Instalar la CLI de Engram — guía oficial:
+#   https://github.com/Gentleman-Programming/engram
+# Tooling asociado — guía oficial:
+#   https://github.com/Gentleman-Programming/gentle-ai
 # La config entra como servidor MCP local
 engram mcp --tools=agent
 ```

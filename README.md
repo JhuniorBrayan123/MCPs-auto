@@ -16,7 +16,7 @@ Context7 y Excalidraw en minutos.
 |---|-----|------|------------|-------|
 | 1 | **BookStack** | 🧑‍💻 Propio (Node/TS) | Consultar y documentar en BookStack (wiki del agente QA) | `cd tools/mcp-bookstack && npm install && npm run build` |
 | 2 | **GitLab** | 🧑‍💻 Propio (Python) | Leer/operar GitLab: MRs, diffs, pipelines, archivos | `pip install -r tools/mcp-gitlab/requirements.txt` |
-| 3 | **Engram** | 🛠️ CLI instalada | Memoria persistente entre sesiones | instalar CLI Engram + `engram mcp` |
+| 3 | **Engram** | 🛠️ CLI instalada | Memoria persistente entre sesiones | [guía de instalación](https://github.com/Gentleman-Programming/engram) + `engram mcp` |
 | 4 | **Context7** | ☁️ Remoto | Documentación actualizada de librerías/frameworks | ninguno (URL remota) |
 | 5 | **Excalidraw** | 📦 open-source | Diagramas editables en canvas | `npx mcp-excalidraw-server` (opcional) |
 
@@ -83,7 +83,8 @@ explícita y no confían en placeholders.
 
 ## 🧭 MCPs de terceros (referencia, no re-vendorizados)
 
-- **Engram** — instalar CLI desde su repo oficial; la config entra como `engram mcp`.
+- **Engram** — memoria persistente; instalar desde su [guía de instalación](https://github.com/Gentleman-Programming/engram); la config entra como `engram mcp`.
+- **Gentle AI** — tooling que integra estos MCPs con los agentes; ver su [guía de instalación](https://github.com/Gentleman-Programming/gentle-ai).
 - **Context7** — MCP remoto `https://mcp.context7.com/mcp`; sin instalación local.
 - **Excalidraw** — paquete npm open-source `mcp-excalidraw-server`; opcional, para
   diagramas editables; se instala con `npx` (no se copia en `tools/`).
