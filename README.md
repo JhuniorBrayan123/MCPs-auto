@@ -84,10 +84,22 @@ explícita y no confían en placeholders.
 ## 🧭 MCPs de terceros (referencia, no re-vendorizados)
 
 - **Engram** — memoria persistente; instalar desde su [guía de instalación](https://github.com/Gentleman-Programming/engram); la config entra como `engram mcp`.
-- **Gentle AI** — tooling que integra estos MCPs con los agentes; ver su [guía de instalación](https://github.com/Gentleman-Programming/gentle-ai).
 - **Context7** — MCP remoto `https://mcp.context7.com/mcp`; sin instalación local.
 - **Excalidraw** — paquete npm open-source `mcp-excalidraw-server`; opcional, para
   diagramas editables; se instala con `npx` (no se copia en `tools/`).
+
+---
+
+## 🤖 Gentle AI — orquestador (no es un MCP)
+
+**Gentle AI** no es un MCP de este stack: es el **orquestador** que dota al agente de
+**skills** (SDD, cluster de Azure, etc.) y cohesiona los MCPs en un flujo de trabajo.
+Se instala por separado y orquesta cómo se usan Engram, Context7, GitLab y BookStack.
+Ver su [guía de instalación](https://github.com/Gentleman-Programming/gentle-ai).
+
+> Resumen del ecosistema:
+> - **Gentle AI** = orquestador + skills (define el **cómo**).
+> - **MCPs de este stack** = herramientas conectadas (definen el **con qué**).
 
 ---
 

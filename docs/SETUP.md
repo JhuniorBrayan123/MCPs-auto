@@ -70,8 +70,6 @@ Engram es una herramienta de terceros que aporta memoria entre sesiones.
 ```bash
 # Instalar la CLI de Engram — guía oficial:
 #   https://github.com/Gentleman-Programming/engram
-# Tooling asociado — guía oficial:
-#   https://github.com/Gentleman-Programming/gentle-ai
 # La config entra como servidor MCP local
 engram mcp --tools=agent
 ```
@@ -83,6 +81,19 @@ En `opencode.json`:
   "type": "local",
   "command": ["engram", "mcp", "--tools=agent"]
 }
+```
+
+---
+
+## 3.1 Gentle AI — Orquestador de skills (Opcional)
+
+**Gentle AI** no es un MCP de este stack: es el **orquestador** que dota al agente
+de **skills** y cohesiona los MCPs en un flujo de trabajo. Se instala por separado
+y define el **cómo** se usan Engram, Context7, GitLab y BookStack (el **con qué**).
+
+```bash
+# Instalar Gentle AI — guía oficial:
+#   https://github.com/Gentleman-Programming/gentle-ai
 ```
 
 ---
