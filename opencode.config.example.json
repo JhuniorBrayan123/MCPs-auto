@@ -1,0 +1,39 @@
+# ============================================================================
+# MCP Stack — Configuración de referencia para OpenCode
+#
+# COPIA este archivo y fusiónalo con tu `opencode.json` real. Define cómo
+# OpenCode carga los 5 MCPs del stack. Los MCPs locales apuntan a rutas
+# relativas dentro de `tools/`.
+#
+# NOTA: OpenCode NO auto-carga el `.env` de la raíz para resolver los
+# placeholders `env:VARIABLE`. Por eso mcp-gitlab y mcp-bookstack leen su
+# `.env` por ruta explícita internamente y aquí no se usan placeholders
+# frágiles. Los MCPs que SÍ pueden usar esta sintaxis (engram/context7)
+# la usan porque no dependen del `.env` del proyecto.
+# ============================================================================
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "bookstack": {
+      "type": "local",
+      "command": ["node", "tools/mcp-bookstack/dist/index.js"]
+    },
+    "gitlab": {
+      "type": "local",
+      "command": ["python", "tools/mcp-gitlab/server.py"]
+    },
+    "excalidraw": {
+      "type": "local",
+      "command": ["npx", "-y", "mcp-excalidraw-server"]
+    },
+    "engram": {
+      "type": "local",
+      "command": ["engram", "mcp", "--tools=agent"]
+    },
+    "context7": {
+      "type": "remote",
+      "url": "https://mcp.context7.com/mcp",
+      "enabled": true
+    }
+  }
+}

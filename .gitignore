@@ -1,0 +1,19 @@
+# .gitignore raíz del MCP Stack
+
+# secretos
+.env
+
+# MCP BookStack (node)
+tools/mcp-bookstack/node_modules/
+tools/mcp-bookstack/dist/
+
+# MCP GitLab (python)
+__pycache__/
+*.pyc
+
+# Excalidraw — solo se versionan los .excalidraw canónicos, nunca autosaves
+*.autosave.excalidraw
+
+# SO / editor
+.DS_Store
+Thumbs.db
