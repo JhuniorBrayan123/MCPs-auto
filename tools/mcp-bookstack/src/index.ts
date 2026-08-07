@@ -89,6 +89,127 @@ server.registerTool(
 );
 
 server.registerTool(
+  "bookstack_list_shelves",
+  {
+    title: "Listar estantes de BookStack",
+    description: "Lista los estantes (shelves) disponibles en BookStack.",
+    inputSchema: {}
+  },
+  async () => {
+    const result = await bookStack.listShelves();
+
+    return {
+      content: [
+        {
+          type: "text",
+          text: JSON.stringify(result, null, 2)
+        }
+      ]
+    };
+  }
+);
+
+server.registerTool(
+  "bookstack_get_shelf",
+  {
+    title: "Leer estante de BookStack",
+    description: "Obtiene un estante por ID, incluyendo los libros que contiene.",
+    inputSchema: {
+      shelfId: z.number().int().positive().describe("ID del estante")
+    }
+  },
+  async ({ shelfId }) => {
+    const result = await bookStack.getShelf(shelfId);
+
+    return {
+      content: [
+        {
+          type: "text",
+          text: JSON.stringify(result, null, 2)
+        }
+      ]
+    };
+  }
+);
+
+server.registerTool(
+  "bookstack_get_book",
+  {
+    title: "Leer libro de BookStack",
+    description: "Obtiene un libro por ID, incluyendo sus capítulos y páginas directas.",
+    inputSchema: {
+      bookId: z.number().int().positive().describe("ID del libro")
+    }
+  },
+  async ({ bookId }) => {
+    const result = await bookStack.getBook(bookId);
+
+    return {
+      content: [
+        {
+          type: "text",
+          text: JSON.stringify(result, null, 2)
+        }
+      ]
+    };
+  }
+);
+
+server.registerTool(
+  "bookstack_get_chapter",
+  {
+    title: "Leer capítulo de BookStack",
+    description: "Obtiene un capítulo por ID, incluyendo sus páginas.",
+    inputSchema: {
+      chapterId: z.number().int().positive().describe("ID del capítulo")
+    }
+  },
+  async ({ chapterId }) => {
+    const result = await bookStack.getChapter(chapterId);
+
+    return {
+      content: [
+        {
+          type: "text",
+          text: JSON.stringify(result, null, 2)
+        }
+      ]
+    };
+  }
+);
+
+server.registerTool(
+  "bookstack_list_pages",
+  {
+    title: "Listar páginas de BookStack",
+    description:
+      "Lista páginas de BookStack. Puede filtrarse por libro (bookId) o capítulo (chapterId).",
+    inputSchema: {
+      bookId: z.number().int().positive().optional().describe("Filtrar páginas por ID de libro"),
+      chapterId: z
+        .number()
+        .int()
+        .positive()
+        .optional()
+        .describe("Filtrar páginas por ID de capítulo"),
+      count: z.number().int().positive().optional().describe("Máximo de páginas a devolver (default: 100)")
+    }
+  },
+  async ({ bookId, chapterId, count }) => {
+    const result = await bookStack.listPages({ bookId, chapterId, count });
+
+    return {
+      content: [
+        {
+          type: "text",
+          text: JSON.stringify(result, null, 2)
+        }
+      ]
+    };
+  }
+);
+
+server.registerTool(
   "bookstack_get_page",
   {
     title: "Leer página de BookStack",

@@ -48,6 +48,15 @@ el `.env` raíz por ruta explícita y no confía en placeholders de `opencode.js
 
 ## Tools expuestas
 
-- `bookstack_list_books` / `bookstack_list_chapters`
-- `bookstack_search` / `bookstack_get_page`
-- `bookstack_create_page` / `bookstack_update_page` (dryRun por defecto)
+### Lectura / navegación
+- `bookstack_list_books` / `bookstack_list_chapters` / `bookstack_list_shelves`
+- `bookstack_get_book` / `bookstack_get_chapter` / `bookstack_get_shelf`
+- `bookstack_get_page` / `bookstack_list_pages` (filtrable por `bookId` / `chapterId`)
+- `bookstack_search`
+
+### Escritura (dryRun por defecto)
+- `bookstack_create_page` / `bookstack_update_page`
+
+> El MCP arranca con el token del `.env` raíz. Para que una nueva tool quede activa
+> hay que **reiniciar el MCP** (reabrir la sesión de OpenCode, o detener/relanzar
+> el proceso). `npm run build` solo recompila; no recarga el server en curso.

@@ -67,6 +67,34 @@ export class BookStackClient {
     return this.request(`/api/search?query=${encodeURIComponent(query)}`);
   }
 
+  async listShelves() {
+    return this.request("/api/shelves");
+  }
+
+  async getShelf(shelfId: number) {
+    return this.request(`/api/shelves/${shelfId}`);
+  }
+
+  async getBook(bookId: number) {
+    return this.request(`/api/books/${bookId}`);
+  }
+
+  async getChapter(chapterId: number) {
+    return this.request(`/api/chapters/${chapterId}`);
+  }
+
+  async listPages(params: { bookId?: number; chapterId?: number; page?: number; count?: number } = {}) {
+    const search = new URLSearchParams();
+
+    if (params.bookId) search.set("book_id", String(params.bookId));
+    if (params.chapterId) search.set("chapter_id", String(params.chapterId));
+    if (params.count) search.set("count", String(params.count));
+
+    const qs = search.toString();
+
+    return this.request(`/api/pages${qs ? `?${qs}` : ""}`);
+  }
+
   async getPage(pageId: number) {
     return this.request(`/api/pages/${pageId}`);
   }
