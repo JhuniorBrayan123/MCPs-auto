@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "sqlserver": {
+      "command": "node",
+      "args": ["tools/mcp-sqlserver/dist/index.js"]
+    }
+  }
+}

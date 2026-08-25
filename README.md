@@ -16,9 +16,10 @@ Context7 y Excalidraw en minutos.
 |---|-----|------|------------|-------|
 | 1 | **BookStack** | 🧑‍💻 Propio (Node/TS) | Consultar y documentar en BookStack (wiki del agente QA) | `cd tools/mcp-bookstack && npm install && npm run build` |
 | 2 | **GitLab** | 🧑‍💻 Propio (Python) | Leer/operar GitLab: MRs, diffs, pipelines, archivos | `pip install -r tools/mcp-gitlab/requirements.txt` |
-| 3 | **Engram** | 🛠️ CLI instalada | Memoria persistente entre sesiones | [guía de instalación](https://github.com/Gentleman-Programming/engram) + `engram mcp` |
-| 4 | **Context7** | ☁️ Remoto | Documentación actualizada de librerías/frameworks | ninguno (URL remota) |
-| 5 | **Excalidraw** | 📦 open-source | Diagramas editables en canvas | `npx mcp-excalidraw-server` (opcional) |
+| 3 | **SQL Server** | 🧑‍💻 Propio (Node/TS) | Consultar y operar SQL Server (bases `crt` y `prd`) | `cd tools/mcp-sqlserver && npm install && npm run build` |
+| 4 | **Engram** | 🛠️ CLI instalada | Memoria persistente entre sesiones | [guía de instalación](https://github.com/Gentleman-Programming/engram) + `engram mcp` |
+| 5 | **Context7** | ☁️ Remoto | Documentación actualizada de librerías/frameworks | ninguno (URL remota) |
+| 6 | **Excalidraw** | 📦 open-source | Diagramas editables en canvas | `npx mcp-excalidraw-server` (opcional) |
 
 **Dos son código propio** (`tools/`) y **tres son herramientas de terceros** que solo
 se configuran. Este repo los une en una sola receta.
@@ -114,6 +115,11 @@ Ver su [guía de instalación](https://github.com/Gentleman-Programming/gentle-a
 - `list_merge_requests` / `get_merge_request` / `get_merge_request_diff`
 - `get_merge_request_comments` / `get_merge_request_pipelines` / `get_conflicting_files`
 - `create_merge_request` / `update_merge_request` / `approve_merge_request` (escritura, con guardas)
+
+### SQL Server (`tools/mcp-sqlserver`)
+- `sqlserver_query` — Ejecutar query SELECT/CRUD contra la base de datos
+- `sqlserver_get_schema` — Obtener esquema (tablas, vistas, procedimientos) de la base de datos
+- `sqlserver_test_connection` — Probar la conexión a la base de datos
 
 ---
 

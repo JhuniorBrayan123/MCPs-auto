@@ -7,6 +7,10 @@
 tools/mcp-bookstack/node_modules/
 tools/mcp-bookstack/dist/
 
+# MCP SQL Server (node)
+tools/mcp-sqlserver/node_modules/
+tools/mcp-sqlserver/dist/
+
 # MCP GitLab (python)
 __pycache__/
 *.pyc
