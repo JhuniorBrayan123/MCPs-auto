@@ -3,6 +3,26 @@
     "sqlserver": {
       "command": "node",
       "args": ["tools/mcp-sqlserver/dist/index.js"]
+    },
+    "bookstack": {
+      "command": "node",
+      "args": ["tools/mcp-bookstack/dist/index.js"]
+    },
+    "gitlab": {
+      "command": "python",
+      "args": ["tools/mcp-gitlab/server.py"]
+    },
+    "excalidraw": {
+      "command": "npx",
+      "args": ["-y", "mcp-excalidraw-server"]
+    },
+    "engram": {
+      "command": "engram",
+      "args": ["mcp", "--tools=agent"]
+    },
+    "context7": {
+      "type": "http",
+      "url": "https://mcp.context7.com/mcp"
     }
   }
 }

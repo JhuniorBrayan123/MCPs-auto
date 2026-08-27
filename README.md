@@ -116,10 +116,18 @@ Ver su [guía de instalación](https://github.com/Gentleman-Programming/gentle-a
 - `get_merge_request_comments` / `get_merge_request_pipelines` / `get_conflicting_files`
 - `create_merge_request` / `update_merge_request` / `approve_merge_request` (escritura, con guardas)
 
-### SQL Server (`tools/mcp-sqlserver`)
-- `sqlserver_query` — Ejecutar query SELECT/CRUD contra la base de datos
+### SQL Server (`tools/mcp-sqlserver`) — solo lectura
+- `sqlserver_query` — Ejecutar una consulta de solo lectura (SELECT/WITH; el resto se bloquea)
 - `sqlserver_get_schema` — Obtener esquema (tablas, vistas, procedimientos) de la base de datos
 - `sqlserver_test_connection` — Probar la conexión a la base de datos
+- `erp_fallas_resumen` — Resumen de excepciones del log del ERP (por rango de fecha/hora)
+- `erp_fallas_por_modulo` — Excepciones agrupadas por módulo
+- `erp_anomalias` — Detección de anomalías (picos de errores, no solo el módulo más ruidoso)
+- `erp_fallas_rango` — Excepciones en un rango arbitrario
+
+Todas las queries pasan por [`read-only-guard.ts`](tools/mcp-sqlserver/src/read-only-guard.ts),
+que bloquea cualquier sentencia de escritura (INSERT/UPDATE/DELETE/DDL). Soporta
+múltiples perfiles de conexión (`drt`, `prd`, `dev`) vía variables de entorno.
 
 ---
 
