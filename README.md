@@ -154,6 +154,14 @@ Garantía de solo lectura por construcción (cliente ES solo usa `search`, nunca
 en `.env` — ver el [README del submódulo](tools/mcp-elk-observability/README.md)
 para la lista completa de variables y troubleshooting.
 
+**Credenciales centralizadas**: a diferencia de los otros MCPs propios, este
+MCP es un repo externo y no carga el `.env` de la raíz por sí solo (no trae
+`dotenv`, lee directo de `process.env`). Por eso se registra vía
+[`tools/launch-mcp-elk-observability.mjs`](tools/launch-mcp-elk-observability.mjs),
+un wrapper que carga el `.env` de la raíz de `MCPs` antes de arrancar
+`dist/main.js` — sin tocar el código del submódulo. Registra este wrapper
+en tu config de MCP (`.mcp.json`/`opencode.json`), no `dist/main.js` directo.
+
 ---
 
 ## 📄 Licencia

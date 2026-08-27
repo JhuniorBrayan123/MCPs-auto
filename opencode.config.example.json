@@ -37,7 +37,7 @@
     },
     "elk-observability": {
       "type": "local",
-      "command": ["node", "tools/mcp-elk-observability/dist/main.js"]
+      "command": ["node", "tools/launch-mcp-elk-observability.mjs"]
     }
   }
 }

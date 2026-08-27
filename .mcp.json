@@ -26,7 +26,7 @@
     },
     "elk-observability": {
       "command": "node",
-      "args": ["tools/mcp-elk-observability/dist/main.js"]
+      "args": ["tools/launch-mcp-elk-observability.mjs"]
     }
   }
 }
