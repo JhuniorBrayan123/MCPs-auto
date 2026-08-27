@@ -34,6 +34,10 @@
       "type": "remote",
       "url": "https://mcp.context7.com/mcp",
       "enabled": true
+    },
+    "elk-observability": {
+      "type": "local",
+      "command": ["node", "tools/mcp-elk-observability/dist/main.js"]
     }
   }
 }

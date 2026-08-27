@@ -1,0 +1,3 @@
+[submodule "tools/mcp-elk-observability"]
+	path = tools/mcp-elk-observability
+	url = https://gitlab.sreasons.com/GP-Devops/mcp-elk-observability.git

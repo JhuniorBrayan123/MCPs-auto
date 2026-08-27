@@ -20,6 +20,7 @@ Context7 y Excalidraw en minutos.
 | 4 | **Engram** | 🛠️ CLI instalada | Memoria persistente entre sesiones | [guía de instalación](https://github.com/Gentleman-Programming/engram) + `engram mcp` |
 | 5 | **Context7** | ☁️ Remoto | Documentación actualizada de librerías/frameworks | ninguno (URL remota) |
 | 6 | **Excalidraw** | 📦 open-source | Diagramas editables en canvas | `npx mcp-excalidraw-server` (opcional) |
+| 7 | **ELK Observability** | 🔗 Submódulo Git (GP-DevOps) | Observabilidad APM/Elasticsearch de solo lectura (servicios, endpoints, latencia, errores, trazas) para correlacionar fallas de QA con datos reales | `git submodule update --init --recursive` → `cd tools/mcp-elk-observability && npm install && npm run build` |
 
 **Dos son código propio** (`tools/`) y **tres son herramientas de terceros** que solo
 se configuran. Este repo los une en una sola receta.
@@ -29,6 +30,10 @@ se configuran. Este repo los une en una sola receta.
 ## 🚀 Quickstart
 
 ```bash
+# 0. Clona con submódulos (mcp-elk-observability vive en su propio repo GitLab)
+git clone --recurse-submodules <url-de-este-repo>
+# si ya lo clonaste sin submódulos:
+git submodule update --init --recursive
 # 1. Copia este repo a la raíz de tu proyecto (o referencia la carpeta tools/)
 # 2. Crea tu .env a partir del ejemplo
 cp .env.example .env
@@ -37,7 +42,9 @@ cp .env.example .env
 cd tools/mcp-bookstack && npm install && npm run build && cd ../..
 # 5. Instala dependencias de GitLab
 pip install -r tools/mcp-gitlab/requirements.txt
-# 6. Fusiona opencode.config.example.json en tu opencode.json
+# 6. Instala dependencias del MCP ELK Observability (submódulo)
+cd tools/mcp-elk-observability && npm install && npm run build && cd ../..
+# 7. Fusiona opencode.config.example.json en tu opencode.json
 ```
 
 > 📋 Guía paso a paso completa en [`docs/SETUP.md`](docs/SETUP.md).
@@ -128,6 +135,24 @@ Ver su [guía de instalación](https://github.com/Gentleman-Programming/gentle-a
 Todas las queries pasan por [`read-only-guard.ts`](tools/mcp-sqlserver/src/read-only-guard.ts),
 que bloquea cualquier sentencia de escritura (INSERT/UPDATE/DELETE/DDL). Soporta
 múltiples perfiles de conexión (`drt`, `prd`, `dev`) vía variables de entorno.
+
+### ELK Observability (`tools/mcp-elk-observability` — submódulo Git) — solo lectura
+Repo propio del equipo GP-DevOps: `gitlab.sreasons.com/GP-Devops/mcp-elk-observability`.
+13 tools de observabilidad APM/Elasticsearch, sin clasificación de salud (no
+decide "healthy/degraded" — solo expone datos crudos y deja el juicio al agente):
+
+- `list_services` / `list_endpoints` — descubre servicios y sus endpoints
+- `get_service_health` / `get_endpoint_health` — throughput, latencia, error rate
+- `get_endpoint_latency` — percentiles p50–p99 de un endpoint
+- `get_slow_services` / `get_slow_endpoints` — ranking por percentil de latencia
+- `get_service_errors` / `get_endpoint_errors` / `get_top_errors` — desglose de errores 4xx/5xx
+- `trace_request` / `get_trace_dependencies` — reconstrucción de trazas y dependencias
+- `compare_periods` — comparación de métricas entre dos rangos de tiempo
+
+Garantía de solo lectura por construcción (cliente ES solo usa `search`, nunca
+`index/update/delete`). Requiere `ELASTICSEARCH_URL` y `ELASTICSEARCH_API_KEY`
+en `.env` — ver el [README del submódulo](tools/mcp-elk-observability/README.md)
+para la lista completa de variables y troubleshooting.
 
 ---
 

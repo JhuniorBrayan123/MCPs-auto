@@ -23,6 +23,10 @@
     "context7": {
       "type": "http",
       "url": "https://mcp.context7.com/mcp"
+    },
+    "elk-observability": {
+      "command": "node",
+      "args": ["tools/mcp-elk-observability/dist/main.js"]
     }
   }
 }
