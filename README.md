@@ -2,8 +2,8 @@
 
 Stack de **servidores MCP (Model Context Protocol)** que potencia a los agentes de
 IA dentro de **OpenCode**. Es la receta reproducible para que cualquier proyecto
-(incluido el de QA automática/ERP) tenga conectados GitLab, BookStack, Engram,
-Context7 y Excalidraw en minutos.
+(incluido el de QA automática/ERP) tenga conectados GitLab, BookStack, SQL Server,
+ELK Observability, Engram, Context7 y Excalidraw en minutos.
 
 > **Privacidad**: este repo es una **plantilla**. No contiene credenciales ni
 > URLs internas de ninguna organización. Cada quien rellena su propio `.env`.
@@ -22,8 +22,10 @@ Context7 y Excalidraw en minutos.
 | 6 | **Excalidraw** | 📦 open-source | Diagramas editables en canvas | `npx mcp-excalidraw-server` (opcional) |
 | 7 | **ELK Observability** | 🔗 Submódulo Git (GP-DevOps) | Observabilidad APM/Elasticsearch de solo lectura (servicios, endpoints, latencia, errores, trazas) para correlacionar fallas de QA con datos reales | `git submodule update --init --recursive` → `cd tools/mcp-elk-observability && npm install && npm run build` |
 
-**Dos son código propio** (`tools/`) y **tres son herramientas de terceros** que solo
-se configuran. Este repo los une en una sola receta.
+**Tres son código propio** (`tools/mcp-bookstack`, `mcp-gitlab`, `mcp-sqlserver`),
+**uno es desarrollo interno de otro equipo** (`mcp-elk-observability`, GP-DevOps,
+como submódulo Git) y **tres son herramientas externas de terceros** que solo se
+configuran. Este repo los une en una sola receta.
 
 ---
 
@@ -55,11 +57,16 @@ cd tools/mcp-elk-observability && npm install && npm run build && cd ../..
 
 ```
 proyecto/
-├── .env                      ← ÚNICA fuente de credenciales (NO versionado)
-├── opencode.json             ← registra los MCPs
+├── .env                             ← ÚNICA fuente de credenciales (NO versionado)
+├── .gitmodules                      ← registra el submódulo de ELK Observability
+├── opencode.json / .mcp.json        ← registran los MCPs
 ├── tools/
-│   ├── mcp-bookstack/        ← código propio (Node/TS)
-│   └── mcp-gitlab/           ← código propio (Python)
+│   ├── mcp-bookstack/               ← código propio (Node/TS)
+│   ├── mcp-gitlab/                  ← código propio (Python)
+│   ├── mcp-sqlserver/               ← código propio (Node/TS) — SRExcepcion
+│   ├── mcp-elk-observability/       ← submódulo Git (GP-DevOps) — requiere
+│   │                                   `git submodule update --init --recursive`
+│   └── launch-mcp-elk-observability.mjs  ← wrapper que le inyecta el .env raíz
 └── docs/
     └── *.excalidraw          ← escenas de diagramas (Excalidraw)
 ```
