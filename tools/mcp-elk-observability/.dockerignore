@@ -1,0 +1,35 @@
+# Dependencies and build output — reinstalled/rebuilt inside the image.
+node_modules
+dist
+coverage
+
+# Environment / secrets — never baked into the image.
+.env
+.env.*
+!.env.example
+
+# VCS metadata.
+.git
+.gitignore
+.dockerignore
+
+# Docker itself.
+Dockerfile
+docker-compose*.yml
+
+# Tests and test fixtures — not needed at runtime (only compiled dist/ is
+# copied into the final image, and the builder stage only needs src/).
+**/*.test.ts
+test/
+
+# Documentation, spec/SDD artifacts, and editor/IDE metadata — not needed to
+# build or run the server.
+specs/
+*.md
+.atl/
+.vscode/
+.idea/
+
+# OS / editor cruft.
+.DS_Store
+Thumbs.db

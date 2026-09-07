@@ -1,0 +1,83 @@
+[
+  {
+    "_id": "span-http-1",
+    "@timestamp": "2026-08-25T10:00:00.400Z",
+    "processor": { "event": "span" },
+    "service": { "name": "PuntoVentaAPI", "environment": "produccion" },
+    "transaction": { "id": "tx-normal" },
+    "trace": { "id": "4f5dcb1a1b1bde0fdb9a130a85544498" },
+    "span": {
+      "id": "span-http-1",
+      "type": "external",
+      "subtype": "http",
+      "name": "GET /api/x",
+      "duration": { "us": 30000 }
+    },
+    "destination": { "address": "external-api.example.com" }
+  },
+  {
+    "_id": "span-mssql-2",
+    "@timestamp": "2026-08-25T10:00:00.200Z",
+    "processor": { "event": "span" },
+    "service": { "name": "PuntoVentaAPI", "environment": "produccion" },
+    "transaction": { "id": "tx-normal" },
+    "trace": { "id": "4f5dcb1a1b1bde0fdb9a130a85544498" },
+    "span": {
+      "id": "span-mssql-2",
+      "type": "db",
+      "subtype": "mssql",
+      "name": "SELECT",
+      "duration": { "us": 3200 },
+      "db": { "instance": "SRPuntoVenta" }
+    },
+    "destination": { "address": "mssql-puntoventa.sreasons.internal" }
+  },
+  {
+    "_id": "tx-normal",
+    "@timestamp": "2026-08-25T10:00:00.000Z",
+    "processor": { "event": "transaction" },
+    "service": { "name": "PuntoVentaAPI", "environment": "produccion" },
+    "transaction": {
+      "id": "tx-normal",
+      "name": "GET DocumentosContables/GetDocumentoContableVista",
+      "duration": { "us": 145200 }
+    },
+    "http": { "request": { "method": "GET" }, "response": { "status_code": 200 } },
+    "url": { "path": "/PuntoVenta/api/DocumentosContables/Vista" },
+    "event": { "outcome": "success" },
+    "trace": { "id": "4f5dcb1a1b1bde0fdb9a130a85544498" }
+  },
+  {
+    "_id": "span-redis-1",
+    "@timestamp": "2026-08-25T10:00:00.300Z",
+    "processor": { "event": "span" },
+    "service": { "name": "PuntoVentaAPI", "environment": "produccion" },
+    "transaction": { "id": "tx-normal" },
+    "trace": { "id": "4f5dcb1a1b1bde0fdb9a130a85544498" },
+    "span": {
+      "id": "span-redis-1",
+      "type": "db",
+      "subtype": "redis",
+      "name": "GET",
+      "duration": { "us": 1200 }
+    },
+    "destination": { "address": "redis-cache.internal" }
+  },
+  {
+    "_id": "span-mssql-1",
+    "@timestamp": "2026-08-25T10:00:00.100Z",
+    "processor": { "event": "span" },
+    "service": { "name": "PuntoVentaAPI", "environment": "produccion" },
+    "transaction": { "id": "tx-normal" },
+    "trace": { "id": "4f5dcb1a1b1bde0fdb9a130a85544498" },
+    "span": {
+      "id": "span-mssql-1",
+      "type": "db",
+      "subtype": "mssql",
+      "name": "SAVE",
+      "duration": { "us": 457 },
+      "db": { "instance": "SRPuntoVenta" }
+    },
+    "destination": { "address": "mssql-puntoventa.sreasons.internal" }
+  }
+]

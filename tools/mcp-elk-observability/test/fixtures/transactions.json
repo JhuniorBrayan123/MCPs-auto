@@ -1,0 +1,77 @@
+[
+  {
+    "_id": "tx-normal",
+    "@timestamp": "2026-08-25T10:00:00.000Z",
+    "processor": { "event": "transaction" },
+    "service": { "name": "PuntoVentaAPI", "environment": "produccion" },
+    "transaction": {
+      "id": "tx-normal",
+      "name": "GET DocumentosContables/GetDocumentoContableVista",
+      "duration": { "us": 145200 }
+    },
+    "http": { "request": { "method": "GET" }, "response": { "status_code": 200 } },
+    "url": { "path": "/PuntoVenta/api/DocumentosContables/Vista" },
+    "event": { "outcome": "success" },
+    "trace": { "id": "4f5dcb1a1b1bde0fdb9a130a85544498" }
+  },
+  {
+    "_id": "tx-verbless",
+    "@timestamp": "2026-08-25T10:01:00.000Z",
+    "processor": { "event": "transaction" },
+    "service": { "name": "FinanzasAPI", "environment": "produccion" },
+    "transaction": {
+      "id": "tx-verbless",
+      "name": "ProcesarDescargoFacturacionV2",
+      "duration": { "us": 210000 }
+    },
+    "http": { "request": { "method": "POST" }, "response": { "status_code": 200 } },
+    "url": { "path": "/Finanzas/api/DescargoFacturacion" },
+    "event": { "outcome": "success" },
+    "trace": { "id": "aaaa1111bbbb2222cccc3333dddd4444" }
+  },
+  {
+    "_id": "tx-options",
+    "@timestamp": "2026-08-25T10:02:00.000Z",
+    "processor": { "event": "transaction" },
+    "service": { "name": "PuntoVentaAPI", "environment": "produccion" },
+    "transaction": {
+      "id": "tx-options",
+      "name": "OPTIONS DocumentosContables/GetDocumentoContableVista",
+      "duration": { "us": 5000 }
+    },
+    "http": { "request": { "method": "OPTIONS" }, "response": { "status_code": 200 } },
+    "url": { "path": "/PuntoVenta/api/DocumentosContables/Vista" },
+    "event": { "outcome": "success" },
+    "trace": { "id": "eeee5555ffff6666aaaa7777bbbb8888" }
+  },
+  {
+    "_id": "tx-no-environment",
+    "@timestamp": "2026-08-25T10:03:00.000Z",
+    "processor": { "event": "transaction" },
+    "service": { "name": "ContabilidadAPI" },
+    "transaction": {
+      "id": "tx-no-environment",
+      "name": "GET Reportes/GetBalance",
+      "duration": { "us": 98000 }
+    },
+    "http": { "request": { "method": "GET" }, "response": { "status_code": 200 } },
+    "url": { "path": "/Contabilidad/api/Reportes/Balance" },
+    "event": { "outcome": "success" },
+    "trace": { "id": "1111aaaa2222bbbb3333cccc4444dddd" }
+  },
+  {
+    "_id": "tx-failure",
+    "@timestamp": "2026-08-25T10:04:00.000Z",
+    "processor": { "event": "transaction" },
+    "service": { "name": "PuntoVentaAPI", "environment": "produccion" },
+    "transaction": {
+      "id": "tx-failure",
+      "name": "GET DocumentosContables/GetDocumentoContableVista",
+      "duration": { "us": 8450000 }
+    },
+    "http": { "request": { "method": "GET" }, "response": { "status_code": 500 } },
+    "url": { "path": "/PuntoVenta/api/DocumentosContables/Vista" },
+    "event": { "outcome": "failure" },
+    "trace": { "id": "9999eeee8888ffff7777aaaa6666bbbb" }
+  }
+]

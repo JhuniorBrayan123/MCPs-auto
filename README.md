@@ -20,23 +20,21 @@ ELK Observability, Engram, Context7 y Excalidraw en minutos.
 | 4 | **Engram** | 🛠️ CLI instalada | Memoria persistente entre sesiones | [guía de instalación](https://github.com/Gentleman-Programming/engram) + `engram mcp` |
 | 5 | **Context7** | ☁️ Remoto | Documentación actualizada de librerías/frameworks | ninguno (URL remota) |
 | 6 | **Excalidraw** | 📦 open-source | Diagramas editables en canvas | `npx mcp-excalidraw-server` (opcional) |
-| 7 | **ELK Observability** | 🔗 Submódulo Git (GP-DevOps) | Observabilidad APM/Elasticsearch de solo lectura (servicios, endpoints, latencia, errores, trazas) para correlacionar fallas de QA con datos reales | `git submodule update --init --recursive` → `cd tools/mcp-elk-observability && npm install && npm run build` |
+| 7 | **ELK Observability** | 🧑‍💻 Vendorizado (Node/TS, origen: GP-DevOps) | Observabilidad APM/Elasticsearch de solo lectura (servicios, endpoints, latencia, errores, trazas) para correlacionar fallas de QA con datos reales | `cd tools/mcp-elk-observability && npm install && npm run build` |
 
-**Tres son código propio** (`tools/mcp-bookstack`, `mcp-gitlab`, `mcp-sqlserver`),
-**uno es desarrollo interno de otro equipo** (`mcp-elk-observability`, GP-DevOps,
-como submódulo Git) y **tres son herramientas externas de terceros** que solo se
-configuran. Este repo los une en una sola receta.
+**Cuatro tienen el código real dentro de este repo** (`tools/mcp-bookstack`,
+`mcp-gitlab`, `mcp-sqlserver`, `mcp-elk-observability` — este último originado
+por GP-DevOps, copiado aquí para que un `git clone` normal traiga todo sin
+depender de otro repositorio) y **tres son herramientas externas de terceros**
+que solo se configuran. Este repo los une en una sola receta.
 
 ---
 
 ## 🚀 Quickstart
 
 ```bash
-# 0. Clona con submódulos (mcp-elk-observability vive en su propio repo GitLab)
-git clone --recurse-submodules <url-de-este-repo>
-# si ya lo clonaste sin submódulos:
-git submodule update --init --recursive
-# 1. Copia este repo a la raíz de tu proyecto (o referencia la carpeta tools/)
+# 1. Clona el repo (un git clone normal trae TODO el código, sin pasos extra)
+git clone <url-de-este-repo>
 # 2. Crea tu .env a partir del ejemplo
 cp .env.example .env
 # 3. Llena .env con TUS credenciales
@@ -44,9 +42,11 @@ cp .env.example .env
 cd tools/mcp-bookstack && npm install && npm run build && cd ../..
 # 5. Instala dependencias de GitLab
 pip install -r tools/mcp-gitlab/requirements.txt
-# 6. Instala dependencias del MCP ELK Observability (submódulo)
+# 6. Instala dependencias de SQL Server
+cd tools/mcp-sqlserver && npm install && npm run build && cd ../..
+# 7. Instala dependencias del MCP ELK Observability
 cd tools/mcp-elk-observability && npm install && npm run build && cd ../..
-# 7. Fusiona opencode.config.example.json en tu opencode.json
+# 8. Fusiona opencode.config.example.json en tu opencode.json
 ```
 
 > 📋 Guía paso a paso completa en [`docs/SETUP.md`](docs/SETUP.md).
@@ -58,14 +58,12 @@ cd tools/mcp-elk-observability && npm install && npm run build && cd ../..
 ```
 proyecto/
 ├── .env                             ← ÚNICA fuente de credenciales (NO versionado)
-├── .gitmodules                      ← registra el submódulo de ELK Observability
 ├── opencode.json / .mcp.json        ← registran los MCPs
 ├── tools/
 │   ├── mcp-bookstack/               ← código propio (Node/TS)
 │   ├── mcp-gitlab/                  ← código propio (Python)
 │   ├── mcp-sqlserver/               ← código propio (Node/TS) — SRExcepcion
-│   ├── mcp-elk-observability/       ← submódulo Git (GP-DevOps) — requiere
-│   │                                   `git submodule update --init --recursive`
+│   ├── mcp-elk-observability/       ← vendorizado (origen: GP-DevOps)
 │   └── launch-mcp-elk-observability.mjs  ← wrapper que le inyecta el .env raíz
 └── docs/
     └── *.excalidraw          ← escenas de diagramas (Excalidraw)
@@ -143,8 +141,13 @@ Todas las queries pasan por [`read-only-guard.ts`](tools/mcp-sqlserver/src/read-
 que bloquea cualquier sentencia de escritura (INSERT/UPDATE/DELETE/DDL). Soporta
 múltiples perfiles de conexión (`drt`, `prd`, `dev`) vía variables de entorno.
 
-### ELK Observability (`tools/mcp-elk-observability` — submódulo Git) — solo lectura
-Repo propio del equipo GP-DevOps: `gitlab.sreasons.com/GP-Devops/mcp-elk-observability`.
+### ELK Observability (`tools/mcp-elk-observability`) — solo lectura
+Código vendorizado desde el repo del equipo GP-DevOps
+(`gitlab.sreasons.com/GP-Devops/mcp-elk-observability`) — se copia aquí en vez
+de referenciarlo como submódulo, así un `git clone` normal de este repo trae
+todo sin depender de otro repositorio ni de acceso a GitLab interno. Como
+contrapartida, actualizaciones futuras de GP-DevOps no se sincronizan solas:
+hay que volver a copiar los cambios manualmente cuando haga falta.
 13 tools de observabilidad APM/Elasticsearch, sin clasificación de salud (no
 decide "healthy/degraded" — solo expone datos crudos y deja el juicio al agente):
 
@@ -158,16 +161,18 @@ decide "healthy/degraded" — solo expone datos crudos y deja el juicio al agent
 
 Garantía de solo lectura por construcción (cliente ES solo usa `search`, nunca
 `index/update/delete`). Requiere `ELASTICSEARCH_URL` y `ELASTICSEARCH_API_KEY`
-en `.env` — ver el [README del submódulo](tools/mcp-elk-observability/README.md)
+en `.env` — ver el [README propio de este MCP](tools/mcp-elk-observability/README.md)
 para la lista completa de variables y troubleshooting.
 
 **Credenciales centralizadas**: a diferencia de los otros MCPs propios, este
-MCP es un repo externo y no carga el `.env` de la raíz por sí solo (no trae
-`dotenv`, lee directo de `process.env`). Por eso se registra vía
+no carga el `.env` de la raíz por sí solo (no trae `dotenv`, lee directo de
+`process.env` — así llegó de GP-DevOps y se dejó intacto para no crear una
+divergencia difícil de rastrear si algún día se vuelve a sincronizar). Por
+eso se registra vía
 [`tools/launch-mcp-elk-observability.mjs`](tools/launch-mcp-elk-observability.mjs),
 un wrapper que carga el `.env` de la raíz de `MCPs` antes de arrancar
-`dist/main.js` — sin tocar el código del submódulo. Registra este wrapper
-en tu config de MCP (`.mcp.json`/`opencode.json`), no `dist/main.js` directo.
+`dist/main.js`. Registra este wrapper en tu config de MCP
+(`.mcp.json`/`opencode.json`), no `dist/main.js` directo.
 
 ---
 

@@ -1,0 +1,43 @@
+[
+  {
+    "_id": "err-grouping-key-1",
+    "@timestamp": "2026-08-25T10:05:00.000Z",
+    "processor": { "event": "error" },
+    "service": { "name": "PuntoVentaAPI", "environment": "produccion" },
+    "transaction": { "id": "tx-normal", "name": "GET DocumentosContables/GetDocumentoContableVista" },
+    "error": {
+      "grouping_key": "grp-sqlexception-001",
+      "exception": { "type": "System.Data.SqlClient.SqlException", "message": "Timeout expired." }
+    }
+  },
+  {
+    "_id": "err-grouping-key-2",
+    "@timestamp": "2026-08-25T10:06:00.000Z",
+    "processor": { "event": "error" },
+    "service": { "name": "PuntoVentaAPI", "environment": "produccion" },
+    "transaction": { "id": "tx-normal", "name": "GET DocumentosContables/GetDocumentoContableVista" },
+    "error": {
+      "grouping_key": "grp-sqlexception-001",
+      "exception": { "type": "System.Data.SqlClient.SqlException", "message": "Timeout expired." }
+    }
+  },
+  {
+    "_id": "err-fallback-exception-type",
+    "@timestamp": "2026-08-25T10:07:00.000Z",
+    "processor": { "event": "error" },
+    "service": { "name": "FinanzasAPI", "environment": "produccion" },
+    "transaction": { "id": "tx-verbless", "name": "ProcesarDescargoFacturacionV2" },
+    "error": {
+      "exception": { "type": "System.NullReferenceException", "message": "Object reference not set." }
+    }
+  },
+  {
+    "_id": "err-no-candidate-field",
+    "@timestamp": "2026-08-25T10:08:00.000Z",
+    "processor": { "event": "error" },
+    "service": { "name": "ContabilidadAPI" },
+    "error": {
+      "log": { "message": "Unstructured log-only error with no grouping_key or exception.type." }
+    }
+  }
+]
