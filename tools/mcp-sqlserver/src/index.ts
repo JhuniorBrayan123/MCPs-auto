@@ -6,7 +6,11 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { assertReadOnlyQuery } from "./read-only-guard.js";
 import { registerMonitoringTools } from "./server/monitoring.js";
+import { registerCatalogTools } from "./server/catalog.js";
 import { CONNECTION_NAMES, type ConnectionName } from "./connection-profiles.js";
+import { connectionParam, overrideParams } from "./schemas/catalog.js";
+import { buildSchemaObjectsSql, resolveSchemaFilter } from "./sql/catalog.js";
+import type { SqlOverrides } from "./tools/catalog-shared.js";
 
 const envPath = fileURLToPath(new URL("../../../.env", import.meta.url));
 const dotenvResult = dotenv.config({ path: envPath });
@@ -51,13 +55,7 @@ const profiles: Record<ConnectionName, z.infer<typeof profileSchema>> = {
 
 function makeSqlConfig(
   connection: ConnectionName,
-  overrides?: {
-    server?: string;
-    database?: string;
-    user?: string;
-    password?: string;
-    timeout?: number;
-  }
+  overrides?: SqlOverrides
 ): sql.config {
   const profile = profiles[connection];
   return {
@@ -94,28 +92,15 @@ const server = new McpServer({
   version: "1.0.0",
 });
 
-const connectionParam = z
-  .enum(CONNECTION_NAMES)
-  .default("drt")
-  .describe(
-    "Perfil de conexión a usar: 'dev' (desarrollo), 'drt' (comprobación de recetas / CRT) o 'prd' (producción)"
-  );
-
-const overrideParams = {
-  server: z.string().optional().describe("Servidor SQL (sobreescribe el perfil)"),
-  database: z.string().optional().describe("Base de datos (sobreescribe el perfil)"),
-  user: z.string().optional().describe("Usuario (sobreescribe el perfil)"),
-  password: z.string().optional().describe("Contraseña (sobreescribe el perfil)"),
-};
-
 server.tool(
   "sqlserver_query",
+  "Ejecuta una consulta de SOLO LECTURA. Para consultar otra base del mismo servidor usa el parámetro `database` o nombres de tres partes (`Base.dbo.Tabla`).",
   {
     connection: connectionParam,
     query: z
       .string()
       .describe(
-        "Consulta de SOLO LECTURA (SELECT o WITH). Las operaciones de escritura están bloqueadas."
+        "Consulta de SOLO LECTURA (SELECT o WITH). Las operaciones de escritura están bloqueadas. Otras bases: parámetro `database` o nombres de tres partes (`Base.dbo.Tabla`)."
       ),
     limit: z
       .coerce.number()
@@ -180,12 +165,18 @@ server.tool(
 
 server.tool(
   "sqlserver_get_schema",
+  "Lista tablas, vistas y procedimientos de una base. `database` elige cualquier base del servidor accesible por el login; `schema` filtra (por defecto 'dbo'; '*' o `allSchemas` = todos los esquemas).",
   {
     connection: connectionParam,
-    schema: z.string().optional().default("dbo").describe("Nombre del esquema"),
+    schema: z
+      .string()
+      .optional()
+      .default("dbo")
+      .describe("Nombre del esquema (por defecto 'dbo'). Usa '*' para todos los esquemas"),
+    allSchemas: z.boolean().optional().default(false).describe("true = todos los esquemas (ignora `schema`)"),
     ...overrideParams,
   },
-  async ({ connection, schema, server: overrideServer, database: overrideDatabase, user: overrideUser, password: overridePassword }) => {
+  async ({ connection, schema, allSchemas, server: overrideServer, database: overrideDatabase, user: overrideUser, password: overridePassword }) => {
     let pool: sql.ConnectionPool | undefined;
     try {
       pool = new sql.ConnectionPool(
@@ -198,36 +189,30 @@ server.tool(
       );
       await pool.connect();
 
-      const tables = await pool
-        .request()
-        .input("schema", sql.NVarChar, schema)
-        .query(
-          `SELECT TABLE_NAME, TABLE_SCHEMA FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE' AND TABLE_SCHEMA = @schema`
-        );
+      const schemaFilter = resolveSchemaFilter(schema, allSchemas);
+      const queries = buildSchemaObjectsSql(schemaFilter !== null);
+      const run = (text: string) => {
+        const request = pool!.request();
+        if (schemaFilter !== null) request.input("schema", sql.NVarChar, schemaFilter);
+        return request.query(text);
+      };
+      const tables = await run(queries.tables);
+      const views = await run(queries.views);
+      const procedures = await run(queries.procedures);
+      const current = await pool.request().query("SELECT DB_NAME() AS DatabaseName");
 
-      const views = await pool
-        .request()
-        .input("schema", sql.NVarChar, schema)
-        .query(`SELECT TABLE_NAME, TABLE_SCHEMA FROM INFORMATION_SCHEMA.VIEWS WHERE TABLE_SCHEMA = @schema`);
-
-      const procedures = await pool
-        .request()
-        .input("schema", sql.NVarChar, schema)
-        .query(
-          `SELECT NAME, TYPE_DESC FROM SYS.OBJECTS WHERE TYPE = 'P' AND SCHEMA_ID = SCHEMA_ID(@schema)`
-        );
-
-      const database = overrideDatabase ?? profiles[connection].database;
+      const database = current.recordset[0]?.DatabaseName ?? overrideDatabase ?? profiles[connection].database;
+      const alcance = schemaFilter === null ? "todos los esquemas" : `esquema ${schemaFilter}`;
       return {
         content: [
           {
             type: "text",
-            text: ` Esquema de base de datos: \`${database}\` (conexión: ${connection})\n\n**Tablas** (${tables.recordset.length}):\n${tables.recordset
+            text: ` Esquema de base de datos: \`${database}\` (conexión: ${connection}, ${alcance})\n\n**Tablas** (${tables.recordset.length}):\n${tables.recordset
               .map((t: any) => `- ${t.TABLE_SCHEMA}.${t.TABLE_NAME}`)
               .join("\n")}\n\n**Vistas** (${views.recordset.length}):\n${views.recordset
               .map((v: any) => `- ${v.TABLE_SCHEMA}.${v.TABLE_NAME}`)
               .join("\n")}\n\n**Procedimientos almacenados** (${procedures.recordset.length}):\n${procedures.recordset
-              .map((p: any) => `- ${p.NAME} (${p.TYPE_DESC})`)
+              .map((p: any) => `- ${p.SCHEMA_NAME}.${p.NAME} (${p.TYPE_DESC})`)
               .join("\n")}`,
           },
         ],
@@ -273,7 +258,7 @@ server.tool(
 
       const result = await pool.request().query("SELECT @@VERSION AS Version, DB_NAME() AS DatabaseName");
       const version = result.recordset[0]?.Version ?? "Desconocido";
-      const database = overrideDatabase ?? profiles[connection].database;
+      const database = result.recordset[0]?.DatabaseName ?? overrideDatabase ?? profiles[connection].database;
 
       return {
         content: [
@@ -304,6 +289,7 @@ server.tool(
 
 
 registerMonitoringTools(server, { makeSqlConfig });
+registerCatalogTools(server, { makeSqlConfig });
 
 
 async function main() {
@@ -312,7 +298,7 @@ async function main() {
   console.error(" MCP SQL Server corriendo (stdio)");
   console.error(
     `   Perfiles disponibles: ${CONNECTION_NAMES.map(
-      (name) => `${name} (${profiles[name].database || "sin database"})`
+      (name) => `${name} (${profiles[name].database || "todas las bases (default del login)"})`
     ).join(", ")}`
   );
 }

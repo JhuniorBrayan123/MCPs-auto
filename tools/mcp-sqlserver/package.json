@@ -8,7 +8,7 @@
     "dev": "tsx src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
-    "test": "node --import tsx --test src/read-only-guard.test.ts src/domain/shared.test.ts src/domain/anomalias.test.ts src/domain/rango.test.ts"
+    "test": "node --import tsx --test src/read-only-guard.test.ts src/domain/shared.test.ts src/domain/anomalias.test.ts src/domain/rango.test.ts src/sql/catalog.test.ts src/domain/catalog.test.ts"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.0",
