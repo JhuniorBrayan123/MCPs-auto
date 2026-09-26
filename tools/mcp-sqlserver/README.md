@@ -1,6 +1,6 @@
 # MCP SQL Server (vendored)
 
-Servidor MCP local para consultar y operar **SQL Server** (base de datos `crt` y `prd`). Está versionado dentro de este repo para que todo el equipo lo use igual.
+Servidor MCP local de **solo lectura** para **SQL Server**. Con **una sola credencial por servidor** accede a **todas las bases** que el login pueda ver (catálogo, búsqueda entre bases, consultas y tuning). Está versionado dentro de este repo para que todo el equipo lo use igual.
 
 ## Setup (una sola vez por máquina)
 
@@ -42,6 +42,8 @@ SQLSERVER_PRD_PASSWORD=tu_password_prd
 SQLSERVER_PRD_TIMEOUT=30
 ```
 
+Cada perfil representa **un servidor**, no una base: `SQLSERVER_<PERFIL>_DATABASE` es **opcional**. Si se deja vacío, la conexión entra a la base por defecto del login (normalmente `master`) y las tools pueden trabajar con cualquier base a la que el login tenga acceso (parámetro `database` o nombres de tres partes `Base.dbo.Tabla`).
+
 Cada tool recibe un parámetro `connection` (`"dev"` | `"drt"` | `"prd"`, default `"drt"`) para elegir el perfil. Los parámetros `server`/`database`/`user`/`password`/`timeout` siguen disponibles para sobreescribir puntualmente un campo del perfil elegido, sin tener que repetir todas las credenciales.
 
 La lista de perfiles vive en un solo lugar — [src/connection-profiles.ts](src/connection-profiles.ts) — e `index.ts` y `monitoring-tools.ts` la importan de ahí. Agregar un cuarto perfil es cambiar esa lista una sola vez, no cada archivo por separado.
@@ -61,9 +63,25 @@ La lista de perfiles vive en un solo lugar — [src/connection-profiles.ts](src/
 
 ## Tools expuestas
 
-- `sqlserver_query` — Ejecutar una consulta de **solo lectura** (SELECT/WITH)
-- `sqlserver_get_schema` — Obtener esquema (tablas, vistas, procedimientos) de la base de datos
-- `sqlserver_test_connection` — Probar la conexión a la base de datos
+**Consultas y catálogo (todas las bases del login):**
+
+- `sqlserver_query` — Ejecutar una consulta de **solo lectura** (SELECT/WITH). Otra base: parámetro `database` o nombres de tres partes (`Base.dbo.Tabla`)
+- `sqlserver_get_schema` — Esquema (tablas, vistas, procedimientos) de **cualquier** base (`database`). `schema: "*"` o `allSchemas: true` lista todos los esquemas; default `dbo`
+- `sqlserver_test_connection` — Probar la conexión (muestra la base realmente conectada, `DB_NAME()`)
+- `sqlserver_list_databases` — Lista las bases del servidor: estado, recovery model, compatibilidad, tamaño y si el login tiene acceso (`includeSystem` para incluir master/tempdb/model/msdb)
+- `sqlserver_search_objects` — Busca un texto en nombres de tablas, vistas, procedimientos y funciones (y columnas con `includeColumns`) en **todas** las bases accesibles u online, o en la lista `databases`. Las bases que fallen por permisos se reportan como omitidas sin abortar la búsqueda
+
+**Tuning (solo lectura, DMVs — requieren `VIEW SERVER STATE`):**
+
+- `sqlserver_tuning_missing_indexes` — Índices faltantes sugeridos por SQL Server, ordenados por impacto estimado, con el `CREATE INDEX` sugerido **solo como texto para el DBA** (nunca se ejecuta). Filtro opcional `database`, `limit` (default 25)
+- `sqlserver_tuning_top_queries` — Consultas más costosas desde el caché de planes. `orderBy`: `cpu` \| `duration` \| `reads` \| `writes` \| `executions`; filtro `database`; `limit` (default 20, máx. 200)
+- `sqlserver_tuning_index_usage` — Uso de índices de **una** base (`database` obligatorio): seeks/scans/lookups/updates y tamaño; `onlyUnused: true` muestra índices con escrituras pero sin lecturas (candidatos a revisar). Las estadísticas se reinician al reiniciar el servidor
+- `sqlserver_tuning_blocking` — Requests en curso y bloqueos: sesión bloqueada/bloqueante, wait, tiempo, login, host y sentencia. `onlyBlocked`, `minElapsedMs`
+
+Si al login le falta un permiso, la tool responde qué permiso debe otorgar el DBA en lugar de fallar con una traza.
+
+**Monitoreo de excepciones:**
+
 - `erp_fallas_resumen` — Monitoreo: resumen de excepciones (`SRExcepcion.dbo.log`) agrupado por módulo y nivel, últimos N días
 - `erp_fallas_por_modulo` — Monitoreo: firmas de error dentro de un módulo (tipo + nivel + conteo), últimos N días
 - `erp_falla_detalle` — Monitoreo: mensaje y traza completos de un `idlog` puntual
@@ -113,14 +131,31 @@ Los tests del guard se ejecutan con:
 npm test
 ```
 
+## Permisos recomendados para el login (DBA)
+
+El MCP solo ve lo que el login puede ver. Para que **una sola credencial** lea todas las bases del servidor sin poder modificar nada, el DBA puede otorgar (ejemplo, SQL Server 2014+):
+
+```sql
+USE master;
+-- Lectura en todas las bases de usuario (incluidas las que se creen después)
+GRANT CONNECT ANY DATABASE TO [qa_lectura];
+GRANT SELECT ALL USER SECURABLES TO [qa_lectura];
+-- Tools de tuning (DMVs de rendimiento: índices faltantes, top queries, bloqueos)
+GRANT VIEW SERVER STATE TO [qa_lectura];
+-- Ver definiciones de objetos y tamaños (sys.master_files) en todas las bases
+GRANT VIEW ANY DEFINITION TO [qa_lectura];
+```
+
+Alternativa sin permisos de servidor: crear un usuario con `db_datareader` en cada base (hay que repetirlo por cada base nueva). La capa de solo lectura del propio MCP se mantiene igual, pero la garantía real es que el login sea de lectura.
+
 ## Variables de entorno (desde `.env` raíz)
 
-Cada perfil (`DRT` o `PRD`) usa el mismo set de variables con su prefijo:
+Cada perfil (`DEV`, `DRT` o `PRD`) usa el mismo set de variables con su prefijo:
 
 | Variable | Obligatoria | Descripción | Ejemplo |
 |----------|:---:|-------------|---------|
 | `SQLSERVER_<PERFIL>_SERVER` | ✅ | Host, IP o `HOST\INSTANCIA`. Sin comillas. | `SRVSQL-PRD` |
-| `SQLSERVER_<PERFIL>_DATABASE` | ✅ | Base de datos por defecto de la conexión | `crt`, `prd` |
+| `SQLSERVER_<PERFIL>_DATABASE` | — | Base por defecto de la conexión. Vacío = default del login (normalmente `master`); las tools igual acceden a las demás bases | `crt`, `prd` |
 | `SQLSERVER_<PERFIL>_USER` | ✅ | Login de **autenticación SQL** (no usuario de Windows) | `qa_lectura` |
 | `SQLSERVER_<PERFIL>_PASSWORD` | ✅ | Contraseña. Entre comillas simples si trae `#` o espacios. | `'mi#clave'` |
 | `SQLSERVER_<PERFIL>_PORT` | — | Puerto. Omitir si es el estándar. Default `1433`. | `1433` |

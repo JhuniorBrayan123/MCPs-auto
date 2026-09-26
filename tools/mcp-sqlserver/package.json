@@ -1,7 +1,7 @@
 {
   "name": "mcp-sqlserver",
   "version": "1.0.0",
-  "description": "MCP local para SQL Server - acceso a base de datos crt y prd",
+  "description": "MCP local de solo lectura para SQL Server: todas las bases del login, catálogo y tuning",
   "type": "module",
   "main": "dist/index.js",
   "scripts": {
