@@ -7,6 +7,7 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { assertReadOnlyQuery } from "./read-only-guard.js";
 import { registerMonitoringTools } from "./server/monitoring.js";
 import { registerCatalogTools } from "./server/catalog.js";
+import { registerTuningTools } from "./server/tuning.js";
 import { CONNECTION_NAMES, type ConnectionName } from "./connection-profiles.js";
 import { connectionParam, overrideParams } from "./schemas/catalog.js";
 import { buildSchemaObjectsSql, resolveSchemaFilter } from "./sql/catalog.js";
@@ -290,6 +291,7 @@ server.tool(
 
 registerMonitoringTools(server, { makeSqlConfig });
 registerCatalogTools(server, { makeSqlConfig });
+registerTuningTools(server, { makeSqlConfig });
 
 
 async function main() {
