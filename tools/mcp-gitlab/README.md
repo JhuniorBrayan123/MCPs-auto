@@ -13,7 +13,7 @@ pip install -r requirements.txt --extra-index-url https://pypi.org/simple/
 ```
 
 > **Importante si ya usabas este MCP en stdio (Claude Code/OpenCode):**
-> `server.py` ahora importa `mcp_cognito_avp` incondicionalmente (aunque
+> `src/server.py` ahora importa `mcp_cognito_avp` incondicionalmente (aunque
 > corras en modo `stdio`, donde es un no-op), así que el intérprete de
 > Python que `.mcp.json`/`opencode.config.json` invoquen (`command: python`,
 > el de tu PATH salvo que lo hayas cambiado) necesita las dependencias
@@ -24,7 +24,7 @@ pip install -r requirements.txt --extra-index-url https://pypi.org/simple/
 
 **NO** se commitean. El server es **autocontenido**: carga las variables
 `GITLAB_*` desde un `.env` propio de **esta misma carpeta** (junto a
-`server.py`), por ruta explícita (`load_dotenv(Path(__file__).resolve().parent / ".env")`).
+`main.py`), por ruta explícita (`load_dotenv(Path(__file__).resolve().parent / ".env")`).
 No depende del cwd ni de variables provistas por OpenCode, así que funciona
 igual desde la terminal, OpenCode o CI. Copiá `.env.example` como `.env`
 acá mismo y completá:
@@ -49,8 +49,20 @@ se sustituye por una cadena vacía y el MCP arranca roto **silenciosamente**
 
 ## Uso
 
-- `python server.py` — ejecuta el servidor en modo stdio (lo usa OpenCode)
+- `python main.py` — ejecuta el servidor en modo stdio (lo usa OpenCode)
 - Verificación rápida: el MCP aparece en `opencode.json` como `gitlab`
+
+## Estructura
+
+```
+main.py               # entrypoint fino: carga .env, arranca src/transport.py
+src/
+├── server.py          # construye el MCPServer, auth AVP/Cognito, health route
+├── transport.py       # elige stdio vs streamable-http según MCP_TRANSPORT
+├── tools.py            # las 12 tools (@mcp.tool())
+├── gitlab_client.py    # cliente HTTP crudo contra la API de GitLab
+└── tool_authorization_map.py
+```
 
 ## Tools expuestas
 

@@ -10,7 +10,7 @@
     },
     "gitlab": {
       "command": "python",
-      "args": ["tools/mcp-gitlab/server.py"]
+      "args": ["tools/mcp-gitlab/main.py"]
     },
     "excalidraw": {
       "command": "npx",
