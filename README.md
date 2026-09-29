@@ -21,12 +21,14 @@ ELK Observability, Engram, Context7 y Excalidraw en minutos.
 | 5 | **Context7** | ☁️ Remoto | Documentación actualizada de librerías/frameworks | ninguno (URL remota) |
 | 6 | **Excalidraw** | 📦 open-source | Diagramas editables en canvas | `npx mcp-excalidraw-server` (opcional) |
 | 7 | **ELK Observability** | 🧑‍💻 Vendorizado (Node/TS, origen: GP-DevOps) | Observabilidad APM/Elasticsearch de solo lectura (servicios, endpoints, latencia, errores, trazas) para correlacionar fallas de QA con datos reales | `cd tools/mcp-elk-observability && npm install && npm run build` |
+| 8 | **Jenkins** | 🧑‍💻 Propio (Node/TS) | Consultar jobs/builds/consola/cola/nodos de Jenkins (solo lectura por defecto; disparar/abortar builds bajo flag explícito) | `cd tools/mcp-jenkins && npm install && npm run build` |
 
-**Cuatro tienen el código real dentro de este repo** (`tools/mcp-bookstack`,
+**Cinco tienen el código real dentro de este repo** (`tools/mcp-bookstack`,
 `mcp-gitlab`, `mcp-sqlserver`, `mcp-elk-observability` — este último originado
 por GP-DevOps, copiado aquí para que un `git clone` normal traiga todo sin
-depender de otro repositorio) y **tres son herramientas externas de terceros**
-que solo se configuran. Este repo los une en una sola receta.
+depender de otro repositorio — y `mcp-jenkins`) y **tres son herramientas
+externas de terceros** que solo se configuran. Este repo los une en una sola
+receta.
 
 ---
 
@@ -46,7 +48,9 @@ pip install -r tools/mcp-gitlab/requirements.txt
 cd tools/mcp-sqlserver && npm install && npm run build && cd ../..
 # 7. Instala dependencias del MCP ELK Observability
 cd tools/mcp-elk-observability && npm install && npm run build && cd ../..
-# 8. Fusiona opencode.config.example.json en tu opencode.json
+# 8. Instala dependencias del MCP Jenkins
+cd tools/mcp-jenkins && npm install && npm run build && cd ../..
+# 9. Fusiona opencode.config.example.json en tu opencode.json
 ```
 
 > 📋 Guía paso a paso completa en [`docs/SETUP.md`](docs/SETUP.md).
@@ -64,6 +68,7 @@ proyecto/
 │   ├── mcp-gitlab/                  ← código propio (Python)
 │   ├── mcp-sqlserver/               ← código propio (Node/TS) — SRExcepcion
 │   ├── mcp-elk-observability/       ← vendorizado (origen: GP-DevOps)
+│   ├── mcp-jenkins/                 ← código propio (Node/TS)
 │   └── launch-mcp-elk-observability.mjs  ← wrapper que le inyecta el .env raíz
 └── docs/
     └── *.excalidraw          ← escenas de diagramas (Excalidraw)
@@ -173,6 +178,24 @@ eso se registra vía
 un wrapper que carga el `.env` de la raíz de `MCPs` antes de arrancar
 `dist/main.js`. Registra este wrapper en tu config de MCP
 (`.mcp.json`/`opencode.json`), no `dist/main.js` directo.
+
+### Jenkins (`tools/mcp-jenkins`)
+- `jenkins_test_connection` — Prueba credenciales y conexión, devuelve versión/modo
+- `jenkins_list_jobs` — Lista jobs (soporta carpetas anidadas, `recursive`/`maxDepth`)
+- `jenkins_get_job` — Detalle de un job: salud, parámetros, referencias a últimos builds
+- `jenkins_get_build` — Detalle de un build: resultado, duración, causas, parámetros, cambios SCM
+- `jenkins_get_console_log` — Log de consola de un build (con `tailLines` para no saturar contexto)
+- `jenkins_get_build_changes` — Solo los commits/cambios de SCM incluidos en un build
+- `jenkins_get_pipeline_stages` — Etapas de un Pipeline (requiere plugin `wfapi`)
+- `jenkins_get_queue` — Items en cola (pendientes/bloqueados/atascados)
+- `jenkins_get_nodes` — Estado de nodos/agentes y ejecutores
+- `jenkins_trigger_build` / `jenkins_stop_build` — Disparar/abortar builds (**escritura**,
+  deshabilitadas por defecto; requieren `JENKINS_ALLOW_WRITE=true`)
+
+Autenticación por API Token (nunca password). CSRF crumb se obtiene y envía
+automáticamente en las tools de escritura si Jenkins lo requiere. Soporta
+Jenkins con carpetas anidadas (plugin CloudBees Folders) vía rutas de job
+tipo `carpeta/subcarpeta/job`.
 
 ---
 

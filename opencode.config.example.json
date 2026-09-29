@@ -1,16 +1,4 @@
-# ============================================================================
-# MCP Stack — Configuración de referencia para OpenCode
-#
-# COPIA este archivo y fusiónalo con tu `opencode.json` real. Define cómo
-# OpenCode carga los 5 MCPs del stack. Los MCPs locales apuntan a rutas
-# relativas dentro de `tools/`.
-#
-# NOTA: OpenCode NO auto-carga el `.env` de la raíz para resolver los
-# placeholders `env:VARIABLE`. Por eso mcp-gitlab y mcp-bookstack leen su
-# `.env` por ruta explícita internamente y aquí no se usan placeholders
-# frágiles. Los MCPs que SÍ pueden usar esta sintaxis (engram/context7)
-# la usan porque no dependen del `.env` del proyecto.
-# ============================================================================
+
 {
   "$schema": "https://opencode.ai/config.json",
   "mcp": {
@@ -38,6 +26,10 @@
     "elk-observability": {
       "type": "local",
       "command": ["node", "tools/launch-mcp-elk-observability.mjs"]
+    },
+    "jenkins": {
+      "type": "local",
+      "command": ["node", "tools/mcp-jenkins/dist/index.js"]
     }
   }
 }

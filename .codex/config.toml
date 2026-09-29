@@ -1,0 +1,36 @@
+[mcp_servers.bookstack]
+command = "node"
+args = ["tools/mcp-bookstack/dist/index.js"]
+
+[mcp_servers.context7]
+url = "https://mcp.context7.com/mcp"
+
+[mcp_servers.elk-observability]
+command = "node"
+args = ["tools/launch-mcp-elk-observability.mjs"]
+
+[mcp_servers.engram]
+command = "engram"
+args = [
+    "mcp",
+    "--tools=agent",
+]
+
+[mcp_servers.excalidraw]
+command = "npx"
+args = [
+    "-y",
+    "mcp-excalidraw-server",
+]
+
+[mcp_servers.gitlab]
+command = "python"
+args = ["tools/mcp-gitlab/server.py"]
+
+[mcp_servers.jenkins]
+command = "node"
+args = ["tools/mcp-jenkins/dist/index.js"]
+
+[mcp_servers.sqlserver]
+command = "node"
+args = ["tools/mcp-sqlserver/dist/index.js"]
