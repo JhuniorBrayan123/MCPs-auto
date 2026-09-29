@@ -3,16 +3,24 @@ from datetime import date, datetime, time
 from decimal import Decimal
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlsplit
 from uuid import UUID
 
 import re
 import pyodbc
 from dotenv import load_dotenv
-from mcp.server.fastmcp import FastMCP
+from mcp.server.mcpserver import MCPServer
+from mcp_cognito_avp import CognitoAvpSettings, build_cognito_avp_auth
+from starlette.requests import Request
+from starlette.responses import PlainTextResponse
 
 # Cargar variables de entorno desde la ruta absoluta del proyecto
 BASE_DIR = Path(__file__).resolve().parent
 load_dotenv(BASE_DIR / ".env")
+
+from tool_authorization_map import TOOL_AUTHORIZATION_MAP
+
+HEALTH_CHECK_PATH = "/api/v1/conectividades"
 
 # --- Reglas de Seguridad para Consultas ---
 FORBIDDEN_KEYWORDS = (
@@ -240,8 +248,23 @@ def _to_json_serializable(value: Any) -> Any:
         return str(value)
     return str(value)
 
-# Inicializar servidor MCP
-mcp = FastMCP("SQLServer-PuntoVenta-MCP")
+# Inicializar servidor MCP con auth AVP/Cognito
+_auth_settings = CognitoAvpSettings()
+_auth = build_cognito_avp_auth(_auth_settings, tool_map=TOOL_AUTHORIZATION_MAP)
+
+mcp = MCPServer(
+    "SQLServer-PuntoVenta-MCP",
+    middleware=[_auth.middleware] if _auth.middleware else [],
+    **_auth.auth_kwargs,
+)
+
+
+@mcp.custom_route(HEALTH_CHECK_PATH, methods=["GET"])  # type: ignore[untyped-decorator]
+async def health(_: Request) -> PlainTextResponse:
+    return PlainTextResponse("ok")
+
+
+_auth.register_routes(mcp)
 
 @mcp.tool()
 def listar_stored_procedures(base_datos: str, servidor: str = None) -> dict[str, Any]:
@@ -434,4 +457,15 @@ def ejecutar_consulta_segura(base_datos: str, query: str, servidor: str = None) 
         return {"status": "error", "message": f"Error de SQL: {str(e)}"}
 
 if __name__ == "__main__":
-    mcp.run()
+    if _auth_settings.mcp_transport == "stdio":
+        mcp.run()
+    elif _auth_settings.mcp_transport == "streamable-http":
+        mcp_path = urlsplit(_auth_settings.mcp_public_url).path or "/mcp"
+        mcp.run(
+            "streamable-http",
+            host=_auth_settings.mcp_host,
+            port=_auth_settings.mcp_port,
+            streamable_http_path=mcp_path,
+        )
+    else:
+        raise RuntimeError(f"Unsupported MCP_TRANSPORT: {_auth_settings.mcp_transport!r}")

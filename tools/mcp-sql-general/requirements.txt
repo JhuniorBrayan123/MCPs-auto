@@ -1,3 +1,10 @@
-mcp
+# mcp viene del índice público de PyPI; mcp-cognito-avp del CodeArtifact
+# privado de la org (erp2-pip) -- instalar con:
+#   pip install -r requirements.txt --extra-index-url https://pypi.org/simple/
+# (requiere haber corrido antes `aws codeartifact login --tool pip
+# --domain smartreasons --domain-owner 983698321034 --repository erp2-pip
+# --region us-west-2`, el token dura 12h)
+mcp[cli]>=2.0.0
+mcp-cognito-avp>=0.3.0
 pyodbc
 python-dotenv
