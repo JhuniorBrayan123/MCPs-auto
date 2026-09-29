@@ -115,12 +115,46 @@ straight at it (see below).
 Test scripts (`package.json`):
 
 ```bash
-npm test              # vitest run — single run, all 282 tests
+npm test              # vitest run — single run, all 286 tests
 npm run test:watch    # vitest — watch mode
 npm run test:coverage # vitest run --coverage
 ```
 
 Type-check without emitting: `npx tsc --noEmit`.
+
+## Streamable-http transport (trusted-issuer + AVP)
+
+By default (`MCP_TRANSPORT=stdio`, or unset) this server behaves exactly as
+described above: local process, stdin/stdout, no network, no auth. Setting
+`MCP_TRANSPORT=streamable-http` switches to an Express server exposing
+`POST` on whatever path `MCP_PUBLIC_URL` says (bound on `MCP_HOST`/`MCP_PORT`)
+— in this deployment, `https://mcp.gutierrezautomotriz.com/elk-observability/mcp`,
+behind the same shared ALB that already fronts
+[`../../../mcp-oauth-proxy`](../../../mcp-oauth-proxy) at the domain root,
+routing `/elk-observability/*` to this process's local port (see
+[`../../deploy/PORTS.md`](../../deploy/PORTS.md)). The path is taken
+verbatim from `MCP_PUBLIC_URL` (`src/transport/http.ts`), so that value
+must match the ALB rule exactly.
+
+### Instalación
+
+`mcp-cognito-avp` lives only in `erp2-npm` (private). This repo's `.npmrc`
+points the *default* registry straight at `erp2-npm`:
+
+```
+registry=https://smartreasons-983698321034.d.codeartifact.us-west-2.amazonaws.com/npm/erp2-npm/
+```
+
+`erp2-npm` has an upstream configured to resolve public packages too, so a
+plain `npm install`/`npm ci` resolves everything (private and public)
+through this single registry — no scopes, no tarball URLs, no two-step
+install. The only requirement is a valid CodeArtifact npm login before
+installing (lasts 12h):
+
+```powershell
+aws codeartifact login --tool npm --domain smartreasons --domain-owner 983698321034 --repository erp2-npm --region us-west-2
+npm install
+```
 
 ## MCP client configuration (Claude Code / Claude Desktop)
 

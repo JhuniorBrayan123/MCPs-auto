@@ -15,12 +15,6 @@ import * as traceRequestTool from "../tools/trace_request.js";
 import * as getTraceDependenciesTool from "../tools/get_trace_dependencies.js";
 import * as comparePeriodsTool from "../tools/compare_periods.js";
 
-/**
- * Shape every `tools/<name>.ts` module conforms to: an MCP tool identifier,
- * a human-readable description, its Zod input schema, and a thin
- * `execute()` that validates + calls the domain layer + shapes/sanitizes
- * the response (see tools/shared.ts's `runTool`).
- */
 interface ToolModule {
   name: string;
   description: string;
@@ -28,7 +22,6 @@ interface ToolModule {
   execute: (rawInput: unknown, deps: ToolDeps) => Promise<unknown>;
 }
 
-/** All 13 v0.1 tools (design.md §6/specification.md), in specification order. */
 const TOOL_MODULES: ToolModule[] = [
   listServicesTool,
   listEndpointsTool,
@@ -51,16 +44,7 @@ function isErrorEnvelope(value: unknown): boolean {
   return typeof value === "object" && value !== null && "error" in value;
 }
 
-/**
- * Builds the MCP server (transport-agnostic per design.md §1) and registers
- * exactly the 13 documented tools, each wiring its own Zod input schema.
- * `deps` carries the injected search client and index/config values so the
- * server itself never constructs the real `@elastic/elasticsearch` client —
- * that happens once in the entrypoint (`src/main.ts`).
- */
-export function createServer(deps: ToolDeps): McpServer {
-  const server = new McpServer({ name: "mcp-elk-observability", version: "0.1.0" });
-
+export function registerTools(server: McpServer, deps: ToolDeps): McpServer {
   for (const tool of TOOL_MODULES) {
     server.registerTool(
       tool.name,
@@ -79,4 +63,9 @@ export function createServer(deps: ToolDeps): McpServer {
   }
 
   return server;
+}
+
+export function createServer(deps: ToolDeps): McpServer {
+  const server = new McpServer({ name: "mcp-elk-observability", version: "0.1.0" });
+  return registerTools(server, deps);
 }

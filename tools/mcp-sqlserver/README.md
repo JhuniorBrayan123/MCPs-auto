@@ -13,7 +13,7 @@ Esto genera `dist/` (ignorado por git). El MCP se registra en `opencode.json` co
 
 ## Credenciales
 
-**NO** se commitean. El server carga las variables `SQLSERVER_*` desde el `.env` de la **raíz del proyecto** como **única fuente**, por ruta explícita en `src/index.ts` (`new URL("../../../.env", import.meta.url)`, sube tres niveles desde `dist/` o `src/` hasta la raíz del repo). No depende del cwd ni de variables provistas por OpenCode. El `.env.example` de esta carpeta es solo documentación (no se copia como `.env` local).
+**NO** se commitean. El server es **autocontenido**: carga las variables `SQLSERVER_*` desde un `.env` propio de **esta misma carpeta** (junto a `package.json`), por ruta explícita en `src/index.ts`. No depende del cwd ni de variables provistas por OpenCode. Copiá `.env.example` como `.env` acá mismo.
 
 ### Perfiles de conexión (`dev`, `drt` y `prd`)
 
@@ -44,7 +44,7 @@ SQLSERVER_PRD_TIMEOUT=30
 
 Cada tool recibe un parámetro `connection` (`"dev"` | `"drt"` | `"prd"`, default `"drt"`) para elegir el perfil. Los parámetros `server`/`database`/`user`/`password`/`timeout` siguen disponibles para sobreescribir puntualmente un campo del perfil elegido, sin tener que repetir todas las credenciales.
 
-La lista de perfiles vive en un solo lugar — [src/connection-profiles.ts](src/connection-profiles.ts) — e `index.ts` y `monitoring-tools.ts` la importan de ahí. Agregar un cuarto perfil es cambiar esa lista una sola vez, no cada archivo por separado.
+La lista de perfiles vive en un solo lugar — [src/connection-profiles.ts](src/connection-profiles.ts) — y `src/config/sql-config.ts` (que resuelve las variables de entorno a un `sql.config` por perfil) la importa de ahí. Agregar un cuarto perfil es cambiar esa lista una sola vez, no cada archivo por separado.
 
 ### ¿Por qué NO usar placeholders `env:VARIABLE` en `opencode.json`?
 
@@ -68,6 +68,7 @@ La lista de perfiles vive en un solo lugar — [src/connection-profiles.ts](src/
 - `erp_fallas_por_modulo` — Monitoreo: firmas de error dentro de un módulo (tipo + nivel + conteo), últimos N días
 - `erp_falla_detalle` — Monitoreo: mensaje y traza completos de un `idlog` puntual
 - `erp_anomalias` — Monitoreo: errores que se salieron de lo normal (nuevos o con un pico de volumen), no solo los más frecuentes
+- `erp_fallas_rango` — Monitoreo: fallas dentro de un rango de fecha/hora explícito, opcionalmente filtrado por módulo
 
 ### Monitoreo de excepciones (`erp_fallas_resumen` / `erp_fallas_por_modulo`)
 
@@ -93,7 +94,7 @@ El módulo con más errores en total casi nunca es el que causó un incidente pu
 
 `fecha` es `datetime` en SQL Server: no tiene zona horaria, y sus valores están en hora **local del servidor** (UTC-5, confirmado con `SYSDATETIME()` vs `GETUTCDATE()`). Por default, `node-mssql`/`tedious` convierte los `Date` de JavaScript a UTC antes de enviarlos como parámetro — con esta máquina también en UTC-5, eso desfasaba cualquier filtro por hora exacta **5 horas hacia adelante**, en silencio (pedir "08:00–12:00" llegaba a SQL Server como "13:00–17:00"; verificado con conteos reales: 5,411 filas correctas vs. 5,104 con el bug, una ventana de tiempo distinta, no solo unas filas de más o de menos).
 
-`options.useUTC: false` en `makeSqlConfig` (`src/index.ts`) corrige esto — nunca lo quites sin volver a verificar contra una consulta con la fecha como texto literal en el SQL (no como parámetro), que es la única forma en que el bug se hizo visible la primera vez.
+`options.useUTC: false` en `makeSqlConfig` (`src/config/sql-config.ts`) corrige esto — nunca lo quites sin volver a verificar contra una consulta con la fecha como texto literal en el SQL (no como parámetro), que es la única forma en que el bug se hizo visible la primera vez.
 
 ## Solo lectura (importante)
 
@@ -133,3 +134,45 @@ Cada perfil (`DRT` o `PRD`) usa el mismo set de variables con su prefijo:
 - **Puerto no estándar**: usa `PORT`. La sintaxis de SSMS `host,1433` **no funciona** con este driver, porque node-mssql recibe el puerto como campo aparte.
 - **Autenticación de Windows**: no está soportada. Este MCP usa autenticación SQL; si el ERP solo acepta cuentas de dominio, hay que pedir un login SQL dedicado.
 - **Consultar otra base del mismo servidor** (por ejemplo `SRExcepcion`): no hace falta otro perfil, basta calificar la tabla — `SELECT ... FROM SRExcepcion.dbo.LOG` — siempre que el login tenga permiso ahí.
+
+## Streamable-http transport (Cognito + AVP)
+
+Por default (`MCP_TRANSPORT=stdio`, o sin setear) este server se comporta
+exactamente igual que antes: proceso local, stdin/stdout, sin red, sin auth.
+Con `MCP_TRANSPORT=streamable-http` expone `POST` en el path que indique
+`MCP_PUBLIC_URL` (bind en `MCP_HOST`/`MCP_PORT`) -- en este despliegue,
+`https://mcp.gutierrezautomotriz.com/sqlserver/mcp`, detrás del mismo ALB
+que ya expone [`../../../mcp-oauth-proxy`](../../../mcp-oauth-proxy) en la
+raíz del dominio, enrutando `/sqlserver/*` al puerto local de este proceso
+(ver [`../../deploy/PORTS.md`](../../deploy/PORTS.md)). El path se toma tal
+cual de `MCP_PUBLIC_URL` (`src/transport/http.ts`), así que ese valor debe
+coincidir exactamente con la regla del ALB.
+
+Este server es un **resource server puro**: nunca habla con Cognito
+directo. El login (Dynamic Client Registration + PKCE + Cognito Hosted UI)
+lo maneja `mcp-oauth-proxy`, el único proceso del dominio con ese rol -- acá
+solo hace falta `MCP_OAUTH_ISSUER_URL` apuntando a él; no se necesita
+ningún campo `COGNITO_*`. Autorizado por tool con **AWS Verified
+Permissions**, vía
+[`mcp-cognito-avp`](https://smartreasons-983698321034.d.codeartifact.us-west-2.amazonaws.com/npm/erp2-npm/)
+(paquete privado en CodeArtifact -- ver "Instalación" abajo).
+
+### Instalación
+
+`mcp-cognito-avp` vive solo en `erp2-npm` (privado). Este repo's `.npmrc`
+apunta el registro *default* directo a `erp2-npm`:
+
+```
+registry=https://smartreasons-983698321034.d.codeartifact.us-west-2.amazonaws.com/npm/erp2-npm/
+```
+
+`erp2-npm` tiene un upstream configurado para resolver también paquetes
+públicos, así que un `npm install`/`npm ci` normal resuelve todo (privado y
+público) por ese mismo registry -- sin scopes, sin URLs de tarball a mano,
+sin instalación en dos pasos. Solo hace falta un login vigente de
+CodeArtifact antes de instalar (dura 12h):
+
+```powershell
+aws codeartifact login --tool npm --domain smartreasons --domain-owner 983698321034 --repository erp2-npm --region us-west-2
+npm install
+```

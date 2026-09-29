@@ -3,6 +3,9 @@
 # secretos
 .env
 
+# deploy
+deploy/
+
 # MCP BookStack (node)
 tools/mcp-bookstack/node_modules/
 tools/mcp-bookstack/dist/
@@ -12,6 +15,7 @@ tools/mcp-sqlserver/node_modules/
 tools/mcp-sqlserver/dist/
 
 # MCP GitLab (python)
+tools/mcp-gitlab/.venv/
 __pycache__/
 *.pyc
 
