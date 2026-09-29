@@ -10,7 +10,7 @@ En lugar de permitir la ejecucion de consultas SQL arbitrarias (lo que supone un
 El enrutamiento de las conexiones es dinamico: la IA solo provee el nombre de la base de datos a auditar, y el codigo backend lee la configuracion en el archivo `.env` para resolver a que servidor fisico (Host) pertenece esa base de datos y que credenciales aisladas debe utilizar.
 
 > **Importante si ya usabas este MCP en stdio (Claude Code/OpenCode):**
-> `server.py` ahora importa `mcp_cognito_avp` incondicionalmente (aunque
+> `main.py` ahora importa `mcp_cognito_avp` incondicionalmente (aunque
 > corras en modo `stdio`, donde es un no-op), así que el intérprete de
 > Python que invoque este MCP necesita las dependencias nuevas instaladas,
 > no solo en un venv aparte -- si no, el MCP deja de arrancar en stdio con
@@ -51,7 +51,7 @@ A veces las politicas de Windows o los antivirus bloquean el script. Si es asi, 
     "sql-auditor": {
       "command": "C:\\Ruta\\Exacta\\venv\\Scripts\\python.exe",
       "args": [
-        "C:\\Ruta\\Exacta\\server.py"
+        "C:\\Ruta\\Exacta\\main.py"
       ]
     }
   }
@@ -81,7 +81,7 @@ Si planea desplegar el proyecto en un servidor CI/CD o usar n8n en lugar de Clau
    Edite el `.env` con las IP y usuarios correctos.
    
 4. **Enlazar con n8n:**
-   En la configuracion de MCP de n8n, utilice el comando apuntando al ejecutable del entorno virtual creado y envie como argumento la ruta absoluta de `server.py`.
+   En la configuracion de MCP de n8n, utilice el comando apuntando al ejecutable del entorno virtual creado y envie como argumento la ruta absoluta de `main.py`.
 
 ## Herramientas Proporcionadas al Agente IA
 
@@ -99,9 +99,22 @@ El servidor expone 5 herramientas especificas para la auditoria de estructuras y
 - `MCP_TRANSPORT=streamable-http`: expone el server en red vía el ALB compartido
   (`mcp.gutierrezautomotriz.com/sql-general/mcp`), autenticado contra el proxy
   OAuth/Cognito compartido y autorizado por tool vía AWS Verified Permissions
-  (ver `tool_authorization_map.py`). Requiere las variables `MCP_*`/`AVP_*`
+  (ver `src/tool_authorization_map.py`). Requiere las variables `MCP_*`/`AVP_*`
   documentadas al final de `.env.example`.
 - Healthcheck: `GET /api/v1/conectividades` responde `ok` en modo `streamable-http`.
+
+## Estructura
+
+```
+main.py                 # entrypoint fino: carga .env, arranca src/transport.py
+src/
+├── server.py            # construye el MCPServer, auth AVP/Cognito, health route
+├── transport.py         # elige stdio vs streamable-http según MCP_TRANSPORT
+├── tools.py              # las 5 tools (@mcp.tool())
+├── db_client.py           # conexión dinámica por BD, credenciales y parseo de resultados
+├── sql_safety.py          # validación anti-inyección de ejecutar_consulta_segura
+└── tool_authorization_map.py
+```
 
 ## Pruebas Locales
 

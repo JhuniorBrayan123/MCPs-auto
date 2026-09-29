@@ -48,7 +48,7 @@ foreach ($path in $claudePaths) {
 
 if ($targetConfigPath) {
     $pythonExe = Join-Path $venvPath "Scripts\python.exe"
-    $serverPy = Join-Path $PSScriptRoot "server.py"
+    $serverPy = Join-Path $PSScriptRoot "main.py"
     
     $config = @{}
     if (Test-Path $targetConfigPath) {
