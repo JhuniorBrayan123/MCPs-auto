@@ -9,6 +9,14 @@ En lugar de permitir la ejecucion de consultas SQL arbitrarias (lo que supone un
 
 El enrutamiento de las conexiones es dinamico: la IA solo provee el nombre de la base de datos a auditar, y el codigo backend lee la configuracion en el archivo `.env` para resolver a que servidor fisico (Host) pertenece esa base de datos y que credenciales aisladas debe utilizar.
 
+> **Importante si ya usabas este MCP en stdio (Claude Code/OpenCode):**
+> `server.py` ahora importa `mcp_cognito_avp` incondicionalmente (aunque
+> corras en modo `stdio`, donde es un no-op), así que el intérprete de
+> Python que invoque este MCP necesita las dependencias nuevas instaladas,
+> no solo en un venv aparte -- si no, el MCP deja de arrancar en stdio con
+> `ModuleNotFoundError`. `mcp-cognito-avp` viene del CodeArtifact privado
+> de la org (ver comentario en `requirements.txt`).
+
 ## Requisitos Previos
 
 - Python 3.10 o superior
@@ -84,6 +92,16 @@ El servidor expone 5 herramientas especificas para la auditoria de estructuras y
 3. **obtener_columnas_tabla(base_datos, nombre_tabla)**: Retorna el esquema de una tabla (nombres de columnas, tipos de datos, longitud y nulabilidad).
 4. **obtener_indices_tabla(base_datos, nombre_tabla)**: Retorna los indices existentes de una tabla y sus columnas asociadas, util para que la IA identifique oportunidades de optimizacion en consultas.
 5. **ejecutar_consulta_segura(base_datos, query)**: Ejecuta consultas crudas enviadas por la IA con estrictos controles de seguridad (Regex Anti-Drop/Update y limite maximo de 200 filas). Solo permite `SELECT` y `WITH`.
+
+## Transporte y autorización
+
+- `MCP_TRANSPORT=stdio` (default en `.env.example`): uso local, sin red, sin auth.
+- `MCP_TRANSPORT=streamable-http`: expone el server en red vía el ALB compartido
+  (`mcp.gutierrezautomotriz.com/sql-general/mcp`), autenticado contra el proxy
+  OAuth/Cognito compartido y autorizado por tool vía AWS Verified Permissions
+  (ver `tool_authorization_map.py`). Requiere las variables `MCP_*`/`AVP_*`
+  documentadas al final de `.env.example`.
+- Healthcheck: `GET /api/v1/conectividades` responde `ok` en modo `streamable-http`.
 
 ## Pruebas Locales
 
