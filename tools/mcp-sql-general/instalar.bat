@@ -1,0 +1,3 @@
+@echo off
+echo Iniciando el instalador automatizado...
+powershell.exe -ExecutionPolicy Bypass -File "%~dp0setup.ps1"
